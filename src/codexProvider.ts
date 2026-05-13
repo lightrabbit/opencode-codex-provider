@@ -45,6 +45,7 @@ class CodexLanguageModel implements LanguageModelV3 {
     const { stream } = await this.doStream(options)
     const reader = stream.getReader()
     let text = ""
+    let finishReason: import("@ai-sdk/provider").LanguageModelV3FinishReason = { unified: "stop", raw: undefined }
     let usage: LanguageModelV3Usage = {
       inputTokens: { total: undefined, noCache: undefined, cacheRead: undefined, cacheWrite: undefined },
       outputTokens: { total: undefined, text: undefined, reasoning: undefined },
@@ -63,6 +64,7 @@ class CodexLanguageModel implements LanguageModelV3 {
         case "error":
           throw value.error instanceof Error ? value.error : new Error(String(value.error))
         case "finish":
+          finishReason = value.finishReason
           usage = value.usage
           providerMetadata = value.providerMetadata
           break
@@ -75,7 +77,7 @@ class CodexLanguageModel implements LanguageModelV3 {
 
     return {
       content,
-      finishReason: { unified: "stop", raw: undefined },
+      finishReason,
       usage,
       providerMetadata,
       warnings: [],

@@ -35,10 +35,11 @@ export class StreamState {
   ) {}
 
   public updateTokenUsage(info: { total_token_usage?: CodexTokenUsage; last_token_usage?: CodexTokenUsage } | null, rateLimits?: CodexRateLimits | null) {
-    if (!info) return;
-    const usage = info.total_token_usage ?? info.last_token_usage;
-    if (usage) {
-      this.tokenUsage = usage;
+    if (info) {
+      const usage = info.total_token_usage ?? info.last_token_usage;
+      if (usage) {
+        this.tokenUsage = usage;
+      }
     }
     if (rateLimits) {
       this.rateLimits = rateLimits;
@@ -61,7 +62,7 @@ export class StreamState {
     const nonCached = Math.max(0, u.input_tokens - cached);
     return {
       inputTokens: { total: u.input_tokens, noCache: nonCached, cacheRead: Math.min(u.input_tokens, cached), cacheWrite: undefined },
-      outputTokens: { total: u.output_tokens, text: undefined, reasoning: u.reasoning_output_tokens || undefined },
+      outputTokens: { total: u.output_tokens, text: undefined, reasoning: u.reasoning_output_tokens ?? undefined },
     };
   }
 
