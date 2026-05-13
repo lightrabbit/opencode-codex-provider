@@ -16,8 +16,8 @@ describe("Provider Config Registration", () => {
     
     expect(config.provider.codex).toBeDefined()
     expect(config.provider.codex.name).toBe("Codex CLI")
-    expect(config.provider.codex.models["gpt-5-codex"]).toBeDefined()
-    expect(config.provider.codex.models["gpt-5"]).toBeDefined()
+    expect(config.provider.codex.models["gpt-5.5"]).toBeDefined()
+    expect(config.provider.codex.models["gpt-5.4"]).toBeDefined()
   })
   
   test("sets providerFactory option", async () => {
@@ -62,7 +62,7 @@ describe("Provider Config Registration", () => {
     // Should preserve custom models
     expect(config.provider.codex.models["custom-model"]).toBeDefined()
     // Should still add default models
-    expect(config.provider.codex.models["gpt-5-codex"]).toBeDefined()
+    expect(config.provider.codex.models["gpt-5.5"]).toBeDefined()
   })
   
   test("sets npm package name", async () => {

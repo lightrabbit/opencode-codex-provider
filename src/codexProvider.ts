@@ -5,10 +5,8 @@ import type {
   LanguageModelV3StreamPart,
   LanguageModelV3GenerateResult,
   LanguageModelV3StreamResult,
-  LanguageModelV3FinishReason,
   LanguageModelV3Usage,
   ProviderV3,
-  SharedV3Headers,
 } from "@ai-sdk/provider"
 import { CodexMCPClient } from "./codexClient"
 import { codexLog } from "./logger"
@@ -23,11 +21,6 @@ import {
   mapSandboxMode,
   sharedPrefixLength,
 } from "./utils"
-
-const NULL_V3_USAGE: LanguageModelV3Usage = {
-  inputTokens: { total: undefined, noCache: undefined, cacheRead: undefined, cacheWrite: undefined },
-  outputTokens: { total: undefined, text: undefined, reasoning: undefined },
-}
 
 class CodexLanguageModel implements LanguageModelV3 {
   readonly specificationVersion = "v3" as const
@@ -52,6 +45,11 @@ class CodexLanguageModel implements LanguageModelV3 {
     const { stream } = await this.doStream(options)
     const reader = stream.getReader()
     let text = ""
+    let usage: LanguageModelV3Usage = {
+      inputTokens: { total: undefined, noCache: undefined, cacheRead: undefined, cacheWrite: undefined },
+      outputTokens: { total: undefined, text: undefined, reasoning: undefined },
+    }
+    let providerMetadata: import("@ai-sdk/provider").SharedV3ProviderMetadata | undefined
 
     while (true) {
       const { value, done } = await reader.read()
@@ -62,6 +60,10 @@ class CodexLanguageModel implements LanguageModelV3 {
           break
         case "error":
           throw value.error instanceof Error ? value.error : new Error(String(value.error))
+        case "finish":
+          usage = value.usage
+          providerMetadata = value.providerMetadata
+          break
       }
     }
 
@@ -72,7 +74,8 @@ class CodexLanguageModel implements LanguageModelV3 {
     return {
       content,
       finishReason: { unified: "stop", raw: undefined },
-      usage: NULL_V3_USAGE,
+      usage,
+      providerMetadata,
       warnings: [],
     }
   }
@@ -99,9 +102,9 @@ class CodexLanguageModel implements LanguageModelV3 {
       "approval-policy": approvalPolicy,
       sandbox,
       "include-plan-tool": false,
-      config: {
-        model_reasoning_effort: reasoningEffort,
-      },
+    }
+    if (reasoningEffort) {
+      toolArgs["config"] = { model_reasoning_effort: reasoningEffort }
     }
 
     const client = new CodexMCPClient(
@@ -148,7 +151,7 @@ class CodexLanguageModel implements LanguageModelV3 {
           const type = typeof msg.type === "string" ? msg.type : notification.method.split("/").at(-1) ?? ""
 
           if (type === "agent_message_delta" && typeof msg.delta === "string" && msg.delta) {
-            streamState.pushDelta("text", msg.delta, "agent_message_delta")
+            streamState.pushDelta("text", msg.delta)
             lastAgentMessage = `${lastAgentMessage}${msg.delta}`
             return
           }
@@ -163,14 +166,14 @@ class CodexLanguageModel implements LanguageModelV3 {
             const prefixLength = sharedPrefixLength(lastAgentMessage, message)
             const delta = message.slice(prefixLength)
             if (delta) {
-              streamState.pushDelta("text", delta, "agent_message_delta_from_full")
+              streamState.pushDelta("text", delta)
             }
             lastAgentMessage = message
             return
           }
 
           if (includeReasoning && type === "agent_reasoning_delta" && typeof msg.delta === "string" && msg.delta) {
-            streamState.pushReasoning(msg.delta, "agent_reasoning_delta")
+            streamState.pushReasoning(msg.delta)
             lastReasoningMessage = `${lastReasoningMessage}${msg.delta}`
             return
           }
@@ -182,14 +185,14 @@ class CodexLanguageModel implements LanguageModelV3 {
               return
             }
             if (!streamState.reasoningDeltaSeen) {
-              streamState.pushReasoning(text, "agent_reasoning")
+              streamState.pushReasoning(text)
             }
             lastReasoningMessage = text
             return
           }
 
           if (includeReasoning && type === "agent_reasoning_section_break") {
-            streamState.pushReasoning("\n", "agent_reasoning_section_break")
+            streamState.pushReasoning("\n")
             lastReasoningMessage = `${lastReasoningMessage}\n`
             return
           }
@@ -197,12 +200,31 @@ class CodexLanguageModel implements LanguageModelV3 {
           if (includeCommandOutput && type === "exec_command_output_delta" && typeof msg.chunk === "string") {
             const decoded = decodeExecChunk(msg.chunk)
             if (decoded) {
-              streamState.pushDelta("exec", decoded, "exec_command_output_delta")
+              streamState.pushDelta("exec", decoded)
             }
             return
           }
 
+          if (type === "token_count") {
+            codexLog("token_count", { hasUsage: !!msg.info?.total_token_usage, inputTokens: msg.info?.total_token_usage?.input_tokens, outputTokens: msg.info?.total_token_usage?.output_tokens })
+            streamState.updateTokenUsage(msg.info ?? null, msg.rate_limits ?? null)
+            return
+          }
+
+          if (type === "session_configured" && msg.model) {
+            codexLog("session_configured", { model: msg.model })
+            streamState.emitResponseMetadata({ modelId: String(msg.model) })
+            return
+          }
+
           if (type === "task_complete") {
+            codexLog("task_complete", { duration_ms: msg.duration_ms, time_to_first_token_ms: msg.time_to_first_token_ms })
+            if (msg.duration_ms != null || msg.time_to_first_token_ms != null) {
+              streamState.updateTaskTiming({
+                duration_ms: typeof msg.duration_ms === "number" ? msg.duration_ms : undefined,
+                time_to_first_token_ms: typeof msg.time_to_first_token_ms === "number" ? msg.time_to_first_token_ms : undefined,
+              })
+            }
             finishedViaNotification = true
             streamState.finish("stop")
             return
@@ -275,7 +297,7 @@ class CodexLanguageModel implements LanguageModelV3 {
             const prefixLength = sharedPrefixLength(lastAgentMessage, text)
             const delta = text.slice(prefixLength)
             if (delta) {
-              streamState.pushDelta("text", delta, "call_result")
+              streamState.pushDelta("text", delta)
             }
           }
           streamState.finish("stop")
