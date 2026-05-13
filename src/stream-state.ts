@@ -57,9 +57,10 @@ export class StreamState {
         outputTokens: { total: undefined, text: undefined, reasoning: undefined },
       };
     }
-    const nonCached = u.input_tokens - u.cached_input_tokens;
+    const cached = u.cached_input_tokens ?? 0;
+    const nonCached = Math.max(0, u.input_tokens - cached);
     return {
-      inputTokens: { total: u.input_tokens, noCache: nonCached, cacheRead: u.cached_input_tokens, cacheWrite: undefined },
+      inputTokens: { total: u.input_tokens, noCache: nonCached, cacheRead: Math.min(u.input_tokens, cached), cacheWrite: undefined },
       outputTokens: { total: u.output_tokens, text: undefined, reasoning: u.reasoning_output_tokens || undefined },
     };
   }

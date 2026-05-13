@@ -55,8 +55,10 @@ export const CodexProviderPlugin: Plugin = async () => {
         options,
       }
     },
-    "chat.params": async (_input: { sessionID: string; agent: string; model: unknown; provider: unknown; message: unknown }, output: { temperature: number; topP: number; topK: number; maxOutputTokens: number | undefined; options: Record<string, unknown> }) => {
-      output.maxOutputTokens = undefined
+    "chat.params": async (_input: { sessionID: string; agent: string; model: unknown; provider: { source: string; info: { id: string }; options: Record<string, unknown> }; message: unknown }, output: { temperature: number; topP: number; topK: number; maxOutputTokens: number | undefined; options: Record<string, unknown> }) => {
+      if (_input.provider?.info?.id === "codex") {
+        output.maxOutputTokens = undefined
+      }
     },
   } satisfies Hooks
 }

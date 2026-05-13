@@ -56,7 +56,9 @@ class CodexLanguageModel implements LanguageModelV3 {
       if (done) break
       switch (value.type) {
         case "text-delta":
-          text += value.delta
+          if (value.id === "codex-text") {
+            text += value.delta
+          }
           break
         case "error":
           throw value.error instanceof Error ? value.error : new Error(String(value.error))
