@@ -8,6 +8,8 @@ describe("Provider Config Registration", () => {
       project: {} as any,
       directory: "/test",
       worktree: "/test",
+      experimental_workspace: { register: () => {} },
+      serverUrl: new URL("http://localhost:3000"),
       $: {} as any
     })
     
@@ -26,6 +28,8 @@ describe("Provider Config Registration", () => {
       project: {} as any,
       directory: "/test",
       worktree: "/test",
+      experimental_workspace: { register: () => {} },
+      serverUrl: new URL("http://localhost:3000"),
       $: {} as any
     })
 
@@ -43,6 +47,8 @@ describe("Provider Config Registration", () => {
       project: {} as any,
       directory: "/test",
       worktree: "/test",
+      experimental_workspace: { register: () => {} },
+      serverUrl: new URL("http://localhost:3000"),
       $: {} as any
     })
     
@@ -71,6 +77,8 @@ describe("Provider Config Registration", () => {
       project: {} as any,
       directory: "/test",
       worktree: "/test",
+      experimental_workspace: { register: () => {} },
+      serverUrl: new URL("http://localhost:3000"),
       $: {} as any
     })
     

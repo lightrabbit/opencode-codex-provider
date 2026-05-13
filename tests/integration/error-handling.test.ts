@@ -103,8 +103,8 @@ describeOrSkip("Error Handling", () => {
       expect(true).toBe(false) // Should not reach here
     } catch (error) {
       expect(error).toBeInstanceOf(ProviderModule.Provider.ModelNotFoundError)
-      expect(error.message).toContain("nonexistent")
-      expect(error.message).toContain("model")
+      expect((error as Error).message).toContain("nonexistent")
+      expect((error as Error).message).toContain("model")
     }
   })
   
@@ -134,8 +134,8 @@ describeOrSkip("Error Handling", () => {
       expect(true).toBe(false) // Should not reach here
     } catch (error) {
       expect(error).toBeInstanceOf(ProviderModule.Provider.ModelNotFoundError)
-      expect(error.message).toContain("codex")
-      expect(error.message).toContain("nonexistent-model")
+      expect((error as Error).message).toContain("codex")
+      expect((error as Error).message).toContain("nonexistent-model")
     }
   })
   
@@ -183,9 +183,9 @@ describeOrSkip("Error Handling", () => {
         expect(true).toBe(false) // Should not reach here
       } catch (error) {
         expect(error).toBeInstanceOf(ProviderModule.Provider.InitError)
-        expect(error.message).toContain("codex")
-        expect(error.cause).toBeDefined()
-        expect(error.cause.message).toContain("createCodexProvider")
+        expect((error as Error).message).toContain("codex")
+        expect((error as Error).cause).toBeDefined()
+        expect(((error as Error).cause as Error).message).toContain("createCodexProvider")
       }
     } finally {
       // Restore original config
@@ -211,12 +211,15 @@ describeOrSkip("Error Handling", () => {
     const failingFactoryPath = "non-existent-factory-module"
     
     // Mock the import to throw an error
-    const originalImport = global.import
-    global.import = mock(async (path: string) => {
+    const originalImport = (globalThis as Record<string, unknown>)['import'] as ((path: string) => Promise<unknown>) | undefined
+    ;(globalThis as Record<string, unknown>)['import'] = mock(async (path: string) => {
       if (path === failingFactoryPath) {
         throw new Error(`Cannot resolve module '${path}'`)
       }
-      return originalImport(path)
+      if (originalImport) {
+        return originalImport(path)
+      }
+      return undefined
     })
     
     try {
@@ -255,7 +258,7 @@ describeOrSkip("Error Handling", () => {
         // Error should be caught and handled gracefully
         // Could be InitError or the original import error, depending on implementation
         expect(error).toBeDefined()
-        expect(error.message).toContain(failingFactoryPath)
+        expect((error as Error).message).toContain(failingFactoryPath)
       }
       
       // Restore original config
@@ -263,7 +266,7 @@ describeOrSkip("Error Handling", () => {
       
     } finally {
       // Restore original import
-      global.import = originalImport
+      ;(globalThis as Record<string, unknown>)['import'] = originalImport
     }
   })
 })

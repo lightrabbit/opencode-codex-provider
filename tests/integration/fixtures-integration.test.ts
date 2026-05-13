@@ -101,9 +101,9 @@ describe("Integration Testing with Fixtures", () => {
     try {
       await failingProvider.Provider.getModel('codex', 'gpt-5-codex')
     } catch (error) {
-      expect(error.name).toBe('ProviderInitError')
-      expect(error.cause).toBeDefined()
-      expect(error.cause.message).toBe('Simulated factory import error')
+      expect((error as Error).name).toBe('ProviderInitError')
+      expect((error as Error).cause).toBeDefined()
+      expect(((error as Error).cause as Error).message).toBe('Simulated factory import error')
     }
   })
 

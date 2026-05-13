@@ -152,7 +152,7 @@ describeOrSkip("Provider Loading Integration", () => {
     } catch (error) {
       // If the factory loading fails, that's still progress - the patch is applied
       // The factory might fail due to missing dependencies, but the logging should still occur
-      console.log("Factory loading failed (expected in test environment):", error.message)
+      console.log("Factory loading failed (expected in test environment):", (error as Error).message)
     }
   })
 })

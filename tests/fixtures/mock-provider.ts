@@ -106,7 +106,7 @@ export class MockModelNotFoundError extends Error {
 }
 
 export class MockInitError extends Error {
-  public cause?: Error
+  public override cause?: Error
   
   constructor(params: { providerID: string }, options?: { cause?: Error }) {
     let message = `Init error for provider ${params.providerID}`

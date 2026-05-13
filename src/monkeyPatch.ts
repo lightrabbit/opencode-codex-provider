@@ -247,7 +247,7 @@ class CustomModelNotFoundError extends Error {
 }
 
 class CustomInitError extends Error {
-  public cause?: Error
+  public override cause?: Error
   
   constructor(params: { providerID: string }, options?: { cause?: Error }) {
     let message = `Init error for provider ${params.providerID}`

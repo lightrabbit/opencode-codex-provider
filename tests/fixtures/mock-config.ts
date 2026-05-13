@@ -331,6 +331,7 @@ export function createMockConfig(options: MockConfigOptions = {}): MockOpencodeC
   if (includeCodexProvider) {
     config.providers.codex = {
       ...DEFAULT_PROVIDERS.codex,
+      env: [...DEFAULT_PROVIDERS.codex.env],
       providerFactory: customFactories.codex || DEFAULT_PROVIDERS.codex.providerFactory
     }
   }
@@ -339,10 +340,12 @@ export function createMockConfig(options: MockConfigOptions = {}): MockOpencodeC
   if (includeStandardProviders) {
     config.providers.openai = {
       ...DEFAULT_PROVIDERS.openai,
+      env: [...DEFAULT_PROVIDERS.openai.env],
       providerFactory: customFactories.openai
     }
     config.providers.anthropic = {
       ...DEFAULT_PROVIDERS.anthropic,
+      env: [...DEFAULT_PROVIDERS.anthropic.env],
       providerFactory: customFactories.anthropic
     }
   }
@@ -438,7 +441,7 @@ export function createErrorMockConfig(errorType: 'no-providers' | 'invalid-facto
 
     case 'invalid-factory':
       const invalidConfig = createMockConfig({ includeCodexProvider: true })
-      invalidConfig.providers.codex.providerFactory = 'invalid/factory/module'
+      invalidConfig.providers.codex!.providerFactory = 'invalid/factory/module'
       return invalidConfig
 
     case 'missing-env':

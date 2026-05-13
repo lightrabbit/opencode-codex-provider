@@ -113,7 +113,7 @@ describe("Monkey Patch Application", () => {
       // Success is acceptable if Provider module is available
     } catch (error) {
       // Failure is also acceptable if Provider module is not available
-      expect(error.message).toContain("Failed to import Provider module")
+      expect((error as Error).message).toContain("Failed to import Provider module")
     }
   })
 

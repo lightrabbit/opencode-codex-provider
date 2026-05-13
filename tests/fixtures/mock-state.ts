@@ -217,13 +217,13 @@ export function createMockState(options: MockStateOptions = {}): MockState {
 
   // Add codex provider by default
   if (includeCodexProvider) {
-    state.providers.codex = DEFAULT_PROVIDERS.codex
+    state.providers.codex = { ...DEFAULT_PROVIDERS.codex, info: { ...DEFAULT_PROVIDERS.codex.info, env: [...DEFAULT_PROVIDERS.codex.info.env] } }
   }
 
   // Add additional test providers if requested
   if (includeTestProviders) {
-    state.providers.openai = DEFAULT_PROVIDERS.openai
-    state.providers.anthropic = DEFAULT_PROVIDERS.anthropic
+    state.providers.openai = { ...DEFAULT_PROVIDERS.openai, info: { ...DEFAULT_PROVIDERS.openai.info, env: [...DEFAULT_PROVIDERS.openai.info.env] } }
+    state.providers.anthropic = { ...DEFAULT_PROVIDERS.anthropic, info: { ...DEFAULT_PROVIDERS.anthropic.info, env: [...DEFAULT_PROVIDERS.anthropic.info.env] } }
   }
 
   // Pre-populate cache with test data if requested
@@ -307,7 +307,7 @@ export function createErrorMockState(errorType: 'empty' | 'missing-codex' | 'inv
     case 'invalid-factory':
       const state = createMockState()
       // Set invalid factory module path
-      state.providers.codex.options.providerFactory = 'invalid/module/path'
+      state.providers.codex!.options.providerFactory = 'invalid/module/path'
       return state
 
     case 'corrupted':

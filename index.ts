@@ -1,4 +1,4 @@
-import type { Plugin, Hooks } from "@opencode-ai/plugin"
+import type { Plugin, Hooks, Config } from "@opencode-ai/plugin"
 import { createCodexProvider } from "./src/codexProvider"
 import { fileURLToPath } from "node:url"
 
@@ -27,12 +27,14 @@ export const CodexProviderPlugin: Plugin = async () => {
   } satisfies Record<string, Record<string, unknown>>
 
   return {
-    async config(config) {
-      config.provider = config.provider ?? {}
-      const existing = config.provider["codex"] ?? {}
+    async config(input: Config) {
+      const config = input as Record<string, unknown>
+      const providers = (config.provider ?? {}) as Record<string, Record<string, unknown>>
+      config.provider = providers
+      const existing = (providers["codex"] ?? {}) as Record<string, unknown>
       const options = {
-        ...(existing.options ?? {}),
-      }
+        ...((existing.options as Record<string, unknown>) ?? {}),
+      } as Record<string, unknown>
       if (!options.providerFactory) {
         const isFileProtocol = import.meta.url.startsWith("file://")
         if (isFileProtocol) {
@@ -45,7 +47,7 @@ export const CodexProviderPlugin: Plugin = async () => {
         ...defaultModels,
         ...(existing.models ?? {}),
       }
-      config.provider["codex"] = {
+      providers["codex"] = {
         ...existing,
         npm: existing.npm ?? providerNpm,
         name: existing.name ?? "Codex CLI",
@@ -53,7 +55,7 @@ export const CodexProviderPlugin: Plugin = async () => {
         options,
       }
     },
-    "chat.params": async (_input, output) => {
+    "chat.params": async (_input: { sessionID: string; agent: string; model: unknown; provider: unknown; message: unknown }, output: { temperature: number; topP: number; topK: number; maxOutputTokens: number | undefined; options: Record<string, unknown> }) => {
       output.maxOutputTokens = undefined
     },
   } satisfies Hooks

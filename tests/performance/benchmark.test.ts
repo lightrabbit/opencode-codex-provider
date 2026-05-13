@@ -25,7 +25,7 @@ describeOrSkip('Performance Benchmarks', () => {
         const freshState = createMockState({ includeCodexProvider: true })
         
         const startTime = performance.now()
-        applyProviderFactoryPatch(freshState, mockProvider)
+        applyProviderFactoryPatch(mockProvider)
         const endTime = performance.now()
         
         times.push(endTime - startTime)
@@ -48,7 +48,7 @@ describeOrSkip('Performance Benchmarks', () => {
       
       for (let i = 0; i < 1000; i++) {
         const freshState = createMockState({ includeCodexProvider: true })
-        applyProviderFactoryPatch(freshState, mockProvider)
+        applyProviderFactoryPatch(mockProvider)
       }
       
       const endTime = performance.now()
@@ -68,7 +68,7 @@ describeOrSkip('Performance Benchmarks', () => {
       const baselineMemory = process.memoryUsage()
       
       // Apply patch
-      applyProviderFactoryPatch(mockState, mockProvider)
+      applyProviderFactoryPatch(mockProvider)
       
       // Measure after patch
       const afterPatchMemory = process.memoryUsage()
@@ -90,7 +90,7 @@ describeOrSkip('Performance Benchmarks', () => {
       // Apply many patches
       for (let i = 0; i < 100; i++) {
         const freshState = createMockState({ includeCodexProvider: true })
-        applyProviderFactoryPatch(freshState, mockProvider)
+        applyProviderFactoryPatch(mockProvider)
         
         // Force garbage collection if available
         if (global.gc) {
@@ -117,7 +117,7 @@ describeOrSkip('Performance Benchmarks', () => {
         const freshState = createMockState({ includeCodexProvider: true })
         
         const startTime = performance.now()
-        applyProviderFactoryPatch(freshState, mockProvider)
+        applyProviderFactoryPatch(mockProvider)
         const endTime = performance.now()
         
         times.push(endTime - startTime)
@@ -131,7 +131,7 @@ describeOrSkip('Performance Benchmarks', () => {
     })
 
     it('should handle factory lookup efficiently', async () => {
-      applyProviderFactoryPatch(mockState, mockProvider)
+      applyProviderFactoryPatch(mockProvider)
       
       const iterations = 10000
       const startTime = performance.now()
@@ -152,7 +152,7 @@ describeOrSkip('Performance Benchmarks', () => {
 
   describe('Cache Performance', () => {
     it('should cache factory lookups effectively', async () => {
-      applyProviderFactoryPatch(mockState, mockProvider)
+      applyProviderFactoryPatch(mockProvider)
       
       // First lookup (cache miss)
       const startTime1 = performance.now()

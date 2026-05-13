@@ -94,8 +94,8 @@ describe("Test Fixtures", () => {
       const state = createMockState()
       
       expect(state.providers.codex).toBeDefined()
-      expect(state.providers.codex.options.providerFactory).toBe('opencode-codex-provider/provider')
-      expect(state.providers.codex.info.models['gpt-5-codex']).toBeDefined()
+      expect(state.providers.codex!.options.providerFactory).toBe('opencode-codex-provider/provider')
+      expect(state.providers.codex!.info.models['gpt-5-codex']).toBeDefined()
     })
 
     test("includes test providers when requested", () => {
@@ -126,8 +126,8 @@ describe("Test Fixtures", () => {
       const config = createMockConfig()
       
       expect(config.providers.codex).toBeDefined()
-      expect(config.providers.codex.providerFactory).toBe('opencode-codex-provider/provider')
-      expect(config.providers.codex.models['gpt-5-codex']).toBeDefined()
+      expect(config.providers.codex!.providerFactory).toBe('opencode-codex-provider/provider')
+      expect(config.providers.codex!.models['gpt-5-codex']).toBeDefined()
     })
 
     test("includes standard providers when requested", () => {
@@ -135,8 +135,8 @@ describe("Test Fixtures", () => {
       
       expect(config.providers.openai).toBeDefined()
       expect(config.providers.anthropic).toBeDefined()
-      expect(config.providers.openai.env).toContain('OPENAI_API_KEY')
-      expect(config.providers.anthropic.env).toContain('ANTHROPIC_API_KEY')
+      expect(config.providers.openai!.env).toContain('OPENAI_API_KEY')
+      expect(config.providers.anthropic!.env).toContain('ANTHROPIC_API_KEY')
     })
 
     test("applies custom factory configurations", () => {
@@ -150,8 +150,8 @@ describe("Test Fixtures", () => {
         customFactories 
       })
       
-      expect(config.providers.codex.providerFactory).toBe('custom-codex-factory')
-      expect(config.providers.openai.providerFactory).toBe('custom-openai-factory')
+      expect(config.providers.codex!.providerFactory).toBe('custom-codex-factory')
+      expect(config.providers.openai!.providerFactory).toBe('custom-openai-factory')
     })
   })
 
@@ -285,23 +285,23 @@ describe("Test Fixtures", () => {
       
       // Verify provider structure
       const codexProvider = state.providers.codex
-      expect(codexProvider.source).toBe('config')
-      expect(codexProvider.info.id).toBe('codex')
-      expect(codexProvider.info.models).toBeDefined()
-      expect(codexProvider.options.providerFactory).toBeDefined()
+      expect(codexProvider!.source).toBe('config')
+      expect(codexProvider!.info.id).toBe('codex')
+      expect(codexProvider!.info.models).toBeDefined()
+      expect(codexProvider!.options.providerFactory).toBeDefined()
     })
 
     test("mock config supports providerFactory configuration", () => {
       const config = createMockConfig()
       
       // Verify the config has providerFactory settings
-      expect(config.providers.codex.providerFactory).toBe('opencode-codex-provider/provider')
+      expect(config.providers.codex!.providerFactory).toBe('opencode-codex-provider/provider')
       
       // Test custom factory configuration
       const customConfig = createMockConfig({
         customFactories: { codex: 'custom/factory/path' }
       })
-      expect(customConfig.providers.codex.providerFactory).toBe('custom/factory/path')
+      expect(customConfig.providers.codex!.providerFactory).toBe('custom/factory/path')
     })
   })
 })
