@@ -1,4 +1,4 @@
-import type { LanguageModelV2CallOptions } from "@ai-sdk/provider"
+import type { LanguageModelV3CallOptions } from "@ai-sdk/provider"
 import type { CodexProviderOptions, JsonValue } from "./types"
 
 export const DEFAULT_REASONING: CodexProviderOptions["reasoningEffort"] = "minimal"
@@ -80,7 +80,7 @@ export function extractTextFromParts(parts: any[]) {
   return textSegments.join("\n").trim()
 }
 
-export function buildConversationPayload(messages: LanguageModelV2CallOptions["prompt"]) {
+export function buildConversationPayload(messages: LanguageModelV3CallOptions["prompt"]) {
   const systemSegments: string[] = []
   const userSegments: string[] = []
   const assistantSegments: string[] = []

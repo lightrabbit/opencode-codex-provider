@@ -1,7 +1,12 @@
-import { LanguageModelV2FinishReason, LanguageModelV2StreamPart } from "@ai-sdk/provider";
+import type { LanguageModelV3StreamPart, LanguageModelV3FinishReason } from "@ai-sdk/provider";
 import { CodexMCPClient } from "./codexClient";
 
 type StreamType = "text" | "exec" | "reasoning";
+
+const NULL_V3_USAGE = {
+  inputTokens: { total: undefined, noCache: undefined, cacheRead: undefined, cacheWrite: undefined },
+  outputTokens: { total: undefined, text: undefined, reasoning: undefined },
+} as const;
 
 export class StreamState {
   private finished = false;
@@ -11,12 +16,12 @@ export class StreamState {
   public reasoningDeltaSeen = false;
 
   constructor(
-    private readonly controller: ReadableStreamDefaultController<LanguageModelV2StreamPart>,
+    private readonly controller: ReadableStreamDefaultController<LanguageModelV3StreamPart>,
     private readonly client: CodexMCPClient,
     private readonly includeReasoning: boolean,
   ) {}
 
-  public finish(reason: LanguageModelV2FinishReason, error?: Error) {
+  public finish(reason: LanguageModelV3FinishReason["unified"], error?: Error) {
     if (this.finished) return;
     this.finished = true;
 
@@ -30,12 +35,8 @@ export class StreamState {
 
     this.controller.enqueue({
       type: "finish",
-      finishReason: reason,
-      usage: {
-        inputTokens: undefined,
-        outputTokens: undefined,
-        totalTokens: undefined,
-      },
+      finishReason: { unified: reason, raw: undefined },
+      usage: NULL_V3_USAGE,
     });
 
     this.controller.close();

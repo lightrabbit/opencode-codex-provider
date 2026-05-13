@@ -9,8 +9,21 @@ export { createCodexProvider }
 export const CodexProviderPlugin: Plugin = async () => {
   const providerNpm = PACKAGE_NAME
   const defaultModels = {
-    "gpt-5-codex": { name: "GPT-5 Codex", reasoning: true },
-    "gpt-5": { name: "GPT-5", reasoning: true }
+    "gpt-5.5": {
+      name: "GPT-5.5",
+      reasoning: true,
+      limit: { context: 258400, output: 128000 },
+    },
+    "gpt-5.4": {
+      name: "GPT-5.4",
+      reasoning: true,
+      limit: { context: 128000, output: 16384 },
+    },
+    "gpt-5.2": {
+      name: "GPT-5.2",
+      reasoning: true,
+      limit: { context: 128000, output: 16384 },
+    },
   } satisfies Record<string, Record<string, unknown>>
 
   return {
@@ -39,6 +52,9 @@ export const CodexProviderPlugin: Plugin = async () => {
         models: existingModels,
         options,
       }
+    },
+    "chat.params": async (_input, output) => {
+      output.maxOutputTokens = undefined
     },
   } satisfies Hooks
 }

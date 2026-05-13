@@ -1,12 +1,14 @@
 import type {
-  LanguageModelV2,
-  LanguageModelV2CallOptions,
-  LanguageModelV2Content,
-  LanguageModelV2FinishReason,
-  LanguageModelV2StreamPart,
-  LanguageModelV2Usage,
-  SharedV2Headers,
-  ProviderV2,
+  LanguageModelV3,
+  LanguageModelV3CallOptions,
+  LanguageModelV3Content,
+  LanguageModelV3StreamPart,
+  LanguageModelV3GenerateResult,
+  LanguageModelV3StreamResult,
+  LanguageModelV3FinishReason,
+  LanguageModelV3Usage,
+  ProviderV3,
+  SharedV3Headers,
 } from "@ai-sdk/provider"
 import { CodexMCPClient } from "./codexClient"
 import { codexLog } from "./logger"
@@ -22,8 +24,13 @@ import {
   sharedPrefixLength,
 } from "./utils"
 
-class CodexLanguageModel implements LanguageModelV2 {
-  readonly specificationVersion = "v2" as const
+const NULL_V3_USAGE: LanguageModelV3Usage = {
+  inputTokens: { total: undefined, noCache: undefined, cacheRead: undefined, cacheWrite: undefined },
+  outputTokens: { total: undefined, text: undefined, reasoning: undefined },
+}
+
+class CodexLanguageModel implements LanguageModelV3 {
+  readonly specificationVersion = "v3" as const
   readonly provider = "codex"
   readonly supportedUrls: Record<string, RegExp[]> = { "*/*": [] }
 
@@ -41,12 +48,10 @@ class CodexLanguageModel implements LanguageModelV2 {
     return this.modelId
   }
 
-  async doGenerate(options: LanguageModelV2CallOptions) {
+  async doGenerate(options: LanguageModelV3CallOptions): Promise<LanguageModelV3GenerateResult> {
     const { stream } = await this.doStream(options)
     const reader = stream.getReader()
     let text = ""
-    let finishReason: LanguageModelV2FinishReason = "stop"
-    let usage: LanguageModelV2Usage | undefined
 
     while (true) {
       const { value, done } = await reader.read()
@@ -55,44 +60,24 @@ class CodexLanguageModel implements LanguageModelV2 {
         case "text-delta":
           text += value.delta
           break
-        case "finish":
-          finishReason = value.finishReason
-          usage = value.usage
-          break
         case "error":
           throw value.error instanceof Error ? value.error : new Error(String(value.error))
       }
     }
 
-    const content: LanguageModelV2Content[] = text
-      ? [
-          {
-            type: "text",
-            text,
-          },
-        ]
+    const content: LanguageModelV3Content[] = text
+      ? [{ type: "text", text }]
       : []
 
     return {
       content,
-      finishReason,
-      usage:
-        usage ?? {
-          inputTokens: undefined,
-          outputTokens: undefined,
-          totalTokens: undefined,
-        },
+      finishReason: { unified: "stop", raw: undefined },
+      usage: NULL_V3_USAGE,
       warnings: [],
     }
   }
 
-  async doStream(
-    options: LanguageModelV2CallOptions,
-  ): Promise<{
-    stream: ReadableStream<LanguageModelV2StreamPart>
-    request?: { body?: unknown }
-    response?: { headers?: SharedV2Headers }
-  }> {
+  async doStream(options: LanguageModelV3CallOptions): Promise<LanguageModelV3StreamResult> {
     const providerOptions = this.extractProviderOptions(options)
     const { baseInstructions, userText, assistantText } = buildConversationPayload(options.prompt)
     let prompt = userText || "Please respond to the request."
@@ -132,7 +117,7 @@ class CodexLanguageModel implements LanguageModelV2 {
       },
     )
 
-    const stream = new ReadableStream<LanguageModelV2StreamPart>({
+    const stream = new ReadableStream<LanguageModelV3StreamPart>({
       start: async (controller) => {
         const streamState = new StreamState(controller, client, providerOptions.streamReasoning ?? true)
         let finishedViaNotification = false
@@ -219,9 +204,6 @@ class CodexLanguageModel implements LanguageModelV2 {
 
           if (type === "task_complete") {
             finishedViaNotification = true
-            // if (typeof msg.last_agent_message === "string" && msg.last_agent_message && msg.last_agent_message.trim()) {
-            //   streamState.pushDelta("text", msg.last_agent_message, "task_complete")
-            // }
             streamState.finish("stop")
             return
           }
@@ -320,18 +302,19 @@ class CodexLanguageModel implements LanguageModelV2 {
     return { stream }
   }
 
-  private extractProviderOptions(options: LanguageModelV2CallOptions): CodexProviderOptions {
+  private extractProviderOptions(options: LanguageModelV3CallOptions): CodexProviderOptions {
     const providerSpecific =
       ((options.providerOptions ?? {}) as Record<string, CodexProviderOptions | undefined>)[this.provider] ?? {}
     return providerSpecific
   }
 }
 
-export function createCodexProvider(): ProviderV2 {
+export function createCodexProvider(): ProviderV3 {
   return {
+    specificationVersion: "v3",
     languageModel: (modelId: string) => new CodexLanguageModel(modelId),
-    textEmbeddingModel: (modelId:string) => {
-      throw new Error(`Codex provider does not support text embeddings (requested model: ${modelId})`)
+    embeddingModel: (modelId: string) => {
+      throw new Error(`Codex provider does not support embedding models (requested model: ${modelId})`)
     },
     imageModel: (modelId: string) => {
       throw new Error(`Codex provider does not support image models (requested model: ${modelId})`)

@@ -4,11 +4,17 @@
     "codex": {
       "name": "Codex CLI",
       "models": {
-        "gpt-5-codex": {
-          "name": "GPT-5-Codex"
+        "gpt-5.5": {
+          "name": "GPT-5.5",
+          "limit": { "context": 258400, "output": 128000 }
         },
-        "gpt-5": {
-          "name": "GPT-5"
+        "gpt-5.4": {
+          "name": "GPT-5.4",
+          "limit": { "context": 128000, "output": 16384 }
+        },
+        "gpt-5.2": {
+          "name": "GPT-5.2",
+          "limit": { "context": 128000, "output": 16384 }
         }
       }
     }
